@@ -25,6 +25,8 @@
 #include "il2cpp-tabledefs.h"
 #include "vm/Array.h"
 
+#include "hybridclr/metadata/MetadataUtil.h"
+
 static char* copy_name(const char* name)
 {
     const size_t len = strlen(name);
@@ -1260,11 +1262,20 @@ namespace vm
         return type;
     }
 
-    static void InvokeDelegateConstructor(Il2CppDelegate* delegate, Il2CppObject* target, const MethodInfo* method)
+    void Type::InvokeDelegateConstructor(Il2CppDelegate* delegate, Il2CppObject* target, const MethodInfo* method)
     {
         typedef void (*DelegateCtor)(Il2CppDelegate* delegate, Il2CppObject* target, intptr_t method, MethodInfo* hiddenMethodInfo);
         const MethodInfo* ctor = Class::GetMethodFromName(delegate->object.klass, ".ctor", 2);
-        void* ctorArgs[2] = {target, (void*)&method};
+        if (ctor->methodPointer == nullptr || ctor->isInterpterImpl)
+        {
+            delegate->target = target;
+            delegate->method = method;
+            delegate->invoke_impl = hybridclr::InitAndGetInterpreterDirectlyCallMethodPointer(method);
+            delegate->invoke_impl_this = target;
+            //il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetNotSupportedException("interperter delegate can't be constructed by InvokeDelegateConstructor"));
+            return;
+        }
+        void* ctorArgs[2] = { target, (void*)&method };
         ctor->invoker_method(ctor->methodPointer, ctor, delegate, ctorArgs, NULL);
     }
 

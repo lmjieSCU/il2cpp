@@ -68,6 +68,8 @@ extern "C" {
 }
 #endif
 
+#include "hybridclr/Runtime.h"
+
 Il2CppDefaults il2cpp_defaults;
 bool g_il2cpp_is_fully_initialized = false;
 static bool shutting_down = false;
@@ -401,6 +403,7 @@ namespace vm
         vm::MetadataCache::ExecuteEagerStaticClassConstructors();
         vm::MetadataCache::ExecuteModuleInitializers();
 
+        hybridclr::Runtime::Initialize();
         return true;
     }
 
